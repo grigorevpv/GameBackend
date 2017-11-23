@@ -90,11 +90,12 @@ function onListening() {
 }
 
 
-var io = require('socket.io').listen(server);
-var lastPlayderID = 0;
+let io = require('socket.io').listen(server);
+let lastPlayderID = 0;
 
 io.on('connection',function(socket){
     console.log('A user connected');
+
     socket.on('newplayer',function(){
         socket.player = {
             id: lastPlayderID++,
@@ -105,16 +106,22 @@ io.on('connection',function(socket){
         socket.emit('allplayers',getAllPlayers());
         socket.broadcast.emit('newplayer',socket.player);
     });
-    socket.on('disconnect', function () {
 
+    socket.on('playercoordinate', function (x, y) {
+        console.log(`${socket.player.id}: x.coord = ${x}, y.coord = ${y}`);
+        socket.broadcast.emit('enemycoordinate',x, y);
+    });
+
+    socket.on('disconnect', function () {
+        lastPlayderID = 0;
         console.log('A user disconnected');
     });
 });
 
 function getAllPlayers(){
-    var players = [];
+    let players = [];
     Object.keys(io.sockets.connected).forEach(function(socketID){
-        var player = io.sockets.connected[socketID].player;
+        let player = io.sockets.connected[socketID].player;
         if(player) players.push(player);
     });
     return players;
